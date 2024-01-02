@@ -10,6 +10,7 @@ class SeparatorStyle(Enum):
     MPT = auto()
     PLAIN = auto()
     LLAMA_2 = auto()
+    MIXTRAL = auto()
 
 
 @dataclasses.dataclass
@@ -96,6 +97,19 @@ class Conversation:
                     if type(message) is tuple:
                         message, _, _ = message
                     ret += message + seps[i % 2]
+                else:
+                    ret += ""
+        elif self.sep_style == SeparatorStyle.MIXTRAL:
+            ret = self.system + "\n\n"
+            wrap_inst = lambda msg: f"[INST] {msg} [/INST]"
+            for i, (role, message) in enumerate(messages):
+                if message:
+                    if type(message) is tuple:
+                        message, _, _ = message
+                    if i % 2 == 0:
+                        ret += wrap_inst(message)
+                    else:
+                        ret += " " + message + " "
                 else:
                     ret += ""
         else:
@@ -357,6 +371,16 @@ conv_llava_v1_mmtag = Conversation(
     version="v1_mmtag",
 )
 
+conv_llava_mixtral = Conversation(
+    system="Always assist with care, respect, and truth. Respond with utmost utility yet securely. "
+           "Avoid harmful, unethical, prejudiced, or negative content. Ensure replies promote fairness and positivity.",
+    roles=("USER", ""),
+    messages=(),
+    offset=0,
+    sep_style=SeparatorStyle.MIXTRAL,
+    sep="\n",
+)
+
 default_conversation = conv_vicuna_v1
 conv_templates = {
     "default": conv_vicuna_v0,
@@ -372,6 +396,7 @@ conv_templates = {
     "llava_v1": conv_llava_v1,
     "v1_mmtag": conv_llava_v1_mmtag,
     "llava_llama_2": conv_llava_llama_2,
+    "llava_mixtral": conv_llava_mixtral,
 
     "mpt": conv_mpt,
 }
